@@ -1,0 +1,104 @@
+Xbox 360 report:
+
+00 14 00 00 00 00 3f f6 49 f6 6d 05 71 01 00 00 00 00 00 00
+
+00 Report ID
+01 Length (20)
+02 Buttons:
+    01 up
+    02 down
+    04 left
+    08 right
+    10 start
+    20 select
+    40 lp
+    80 rp
+03 Buttons:
+    01 l1
+    02 r1
+    04 heart
+    08
+    10 A (south)
+    20 B (east)
+    40 X (west)
+    80 Y (north)
+04 l2 0..255
+05 r2 0..255
+06,07 lx -32768..32767
+08,09 ly -32768..32767 +up
+0a,0b rx -32768..32767
+0c,0d ry -32768..32767 +up
+0e..13
+
+n30:
+  02 Buttons:
+      01
+      02
+      04
+      08
+      10 start
+      20 select
+      40
+      80
+  03 Buttons:
+      01
+      02
+      04 home
+      08
+      10 A
+      20 B
+      40
+      80
+  07 x -128..127
+  09 y -128..127 +up
+Everything matches.
+Dpad is the left stick for some reason.
+A,B match their counterparts by label but not by position, grumble.
+TA,TB are not distinguishable from A,B.
+
+-- -- -- -- bb bb bb -- bb -- bb bb bb bb -- -- -- -- -- --
+                  ^^    ^^          ^^^^^ avoid: these are noisy "lx" in the original
+                   +-----+-- useful! never emitted by 8bitdos, and analogue thumb buttons on original (expect zero)
+bb=360 only, not 8bitdo
+
+sn30:
+  02 start,select
+  03 Buttons:
+      01 l
+      02 r
+      04
+      08
+      10 B (south)
+      20 A (east)
+      40 Y (west)
+      80 X (north)
+  07 x
+  09 y
+Same as n30 with slightly different buttons.
+These do match xbox360 by position.
+
+xbox:
+  00 14 00 00 73 00 00 00 00 00 00 00 72 ee 0c 0f 82 02 82 02
+  02 Buttons: same as 360
+      01 up
+      02 down
+      04 left
+      08 right
+      10 start
+      20 select
+      40 lp
+      80 rp
+  03
+  04 a 0..255 south
+  05 b 0..255 east
+  06 x 0..255 west
+  07 y 0..255 north
+  08 black 0..255
+  09 white 0..255
+  0a la 0..255
+  0b ra 0..255
+  0c,0d lx -32768..32767
+  0e,0f ly -32768..32767 +up
+  10,11 rx -32768..32767
+  12,13 ry -32768..32767 +up
+Aside from the buttons and the total length, does not match 360.

@@ -1,0 +1,3 @@
+SUBSYSTEM=="usb",ATTRS{idVendor}=="045e",ATTRS{idProduct}=="0289",GROUP="plugdev",RUN+="/usr/local/bin/akjoy --dpad=flip --thumb=binary --bw=binary --trigger=binary"
+SUBSYSTEM=="usb",ATTRS{idVendor}=="045e",ATTRS{idProduct}=="028e",GROUP="plugdev",RUN+="/usr/local/bin/akjoy --dpad=flip --thumb=binary --bw=binary --trigger=binary"
+KERNEL=="uinput",GROUP="plugdev"
