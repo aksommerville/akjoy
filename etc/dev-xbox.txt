@@ -1,0 +1,39 @@
+Xbox (original) Descriptors
+
+ 12 01 10 01 00 00 00 08 5e 04 89 02 21 01 00 00 00 01 09 
+ 02 20 00 01 01 00 80 32 09 04 00 00 02 58 42 00 00 07 05 
+ 81 03 20 00 04 07 05 02 03 20 00 04
+
+Device:
+              bcdUsb: 0110
+        bDeviceClass: 00
+     bDeviceSubClass: 00
+     bDeviceProtocol: 00
+     bMaxPacketSize0: 8
+            idVendor: 045e
+           idProduct: 0289
+           bcdDevice: 0121
+       iManufacturer: 0
+            iProduct: 0
+       iSerialNumber: 0
+  bNumConfigurations: 1
+Configuration:
+        wTotalLength: 32
+      bNumInterfaces: 1
+ bConfigurationValue: 1
+      iConfiguration: 0
+        bmAttributes: 80
+           bMaxPower: 50
+Option 0/1:
+    bInterfaceNumber: 0
+   bAlternateSetting: 0
+       bNumEndpoints: 2
+     bInterfaceClass: 58
+  bInterfaceSubClass: 42
+  bInterfaceProtocol: 00
+          iInterface: 0
+    bEndpointAddress: 81
+        bmAttributes: 03
+      wMaxPacketSize: 32
+           bInterval: 4
+

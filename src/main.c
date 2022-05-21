@@ -1,8 +1,28 @@
+#include "aj_app.h"
+
+int main(int argc,char **argv) {
+  struct aj_app *app=aj_app_new(argc,argv);
+  if (!app) return 1;
+  int status=0;
+  while (1) {
+    int err=aj_app_update(app);
+    if (err<0) { status=1; break; }
+    if (!err) { status=0; break; }
+  }
+  aj_app_del(app,status);
+  return status;
+}
+
+#if 0 //XXX--------------------------------------------- earlier attempts:
 #include "akjoy.h"
+#include "aj_usbhost.h"
+#include "aj_usbdev.h"
+#include "aj_decode.h"
 #include <signal.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
+#include <sys/poll.h>
 
 /* Signal handler.
  */
@@ -391,6 +411,19 @@ static int akjoy_update_sn30(struct akjoy_config *config,struct akjoy_usb *usb,s
   return 0;
 }
 
+/* usbhost callbacks.
+ */
+ 
+static int cb_usbhost_connect(int busid,int devid,const char *path,void *userdata) {
+  fprintf(stderr,"%s %d:%d %s\n",__func__,busid,devid,path);
+  return 0;
+}
+
+static int cb_usbhost_disconnect(int busid,int devid,void *userdata) {
+  fprintf(stderr,"%s %03d:%03d\n",__func__,busid,devid);
+  return 0;
+}
+
 /* Main entry point.
  */
  
@@ -398,7 +431,94 @@ int main(int argc,char **argv) {
   //freopen("/home/andy/proj/akjoy/report","w",stderr);
 
   signal(SIGINT,rcvsig);
+  
+  /* usbhost: works good
+  struct aj_usbhost_delegate usbhost_delegate={
+    .cb_connect=cb_usbhost_connect,
+    .cb_disconnect=cb_usbhost_disconnect,
+  };
+  struct aj_usbhost *usbhost=aj_usbhost_new(&usbhost_delegate);
+  if (!usbhost) return 1;
+  
+  while (!sigc) {
+    struct pollfd pollfd={.fd=usbhost->fd,.events=POLLIN|POLLERR|POLLHUP};
+    if (poll(&pollfd,1,1000)<0) {
+      fprintf(stderr,"poll: %m\n");
+      break;
+    }
+    if (!pollfd.revents) {
+      //fprintf(stderr,"pass\n");
+      continue;
+    }
+    //fprintf(stderr,"POLLED\n");
+    if (aj_usbhost_read(usbhost)<0) {
+      fprintf(stderr,"aj_usbhost_read failed\n");
+      break;
+    }
+  }
+  
+  aj_usbhost_del(usbhost);
+  /**/
+  
+  struct aj_usbdev *usbdev=aj_usbdev_new("/dev/bus/usb/001/008");
+  if (!usbdev) {
+    fprintf(stderr,"Failed to open device: %m\n");
+    return 1;
+  }
+  
+  const uint8_t *v=0;
+  int c=aj_usbdev_get_descriptors(&v,usbdev);
+  int i=0; for (;i<c;i++) fprintf(stderr," %02x",v[i]);
+  fprintf(stderr,"\n");
+  
+  struct aj_usb_summary *summary=aj_usb_summarize(v,c);
+  if (!summary) {
+    fprintf(stderr,"Failed to digest device and config descriptors.\n");
+    aj_usbdev_del(usbdev);
+    return 1;
+  }
+  #define FLD(rpt,fld,fmt) fprintf(stderr,"%20s: "fmt"\n",#fld,rpt.fld);
+  fprintf(stderr,"Device:\n");
+  FLD(summary->device,bcdUsb,"%04x")
+  FLD(summary->device,bDeviceClass,"%02x")
+  FLD(summary->device,bDeviceSubClass,"%02x")
+  FLD(summary->device,bDeviceProtocol,"%02x")
+  FLD(summary->device,bMaxPacketSize0,"%d")
+  FLD(summary->device,idVendor,"%04x")
+  FLD(summary->device,idProduct,"%04x")
+  FLD(summary->device,bcdDevice,"%04x")
+  FLD(summary->device,iManufacturer,"%d")
+  FLD(summary->device,iProduct,"%d")
+  FLD(summary->device,iSerialNumber,"%d")
+  FLD(summary->device,bNumConfigurations,"%d")
+  fprintf(stderr,"Configuration:\n");
+  FLD(summary->configuration,wTotalLength,"%d")
+  FLD(summary->configuration,bNumInterfaces,"%d")
+  FLD(summary->configuration,bConfigurationValue,"%d")
+  FLD(summary->configuration,iConfiguration,"%d")
+  FLD(summary->configuration,bmAttributes,"%02x")
+  FLD(summary->configuration,bMaxPower,"%d")
+  for (i=0;i<summary->optionc;i++) {
+    struct aj_usb_option *option=summary->optionv+i;
+    fprintf(stderr,"Option %d/%d:\n",i,summary->optionc);
+    FLD(option->interface,bInterfaceNumber,"%d")
+    FLD(option->interface,bAlternateSetting,"%d")
+    FLD(option->interface,bNumEndpoints,"%d")
+    FLD(option->interface,bInterfaceClass,"%02x")
+    FLD(option->interface,bInterfaceSubClass,"%02x")
+    FLD(option->interface,bInterfaceProtocol,"%02x")
+    FLD(option->interface,iInterface,"%d")
+    FLD(option->epin,bEndpointAddress,"%02x")
+    FLD(option->epin,bmAttributes,"%02x")
+    FLD(option->epin,wMaxPacketSize,"%d")
+    FLD(option->epin,bInterval,"%d")
+  }
+  free(summary);
+  
+  aj_usbdev_del(usbdev);
+  return 0;
 
+#if 0//XXX play around a little with /sys/kernel/debug/usb/devices, see if a single-daemon strategy is feasible.
   struct akjoy_config config={0};
   int err=akjoy_config_argv(&config,argc,argv);
   if (err<0) return 1;
@@ -540,4 +660,6 @@ int main(int argc,char **argv) {
   akjoy_config_cleanup(&config);
     fflush(stderr);
   return 0;
+#endif
 }
+#endif
