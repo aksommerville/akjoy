@@ -3,6 +3,7 @@
 #include "aj_usbdev.h"
 #include "aj_decode.h"
 #include "aj_device.h"
+#include <time.h>
 #include <limits.h>
 #include <string.h>
 #include <stdlib.h>
@@ -36,6 +37,7 @@ static volatile struct aj_app *aj_app=0;
  */
  
 static void aj_app_rcvsig(int sigid) {
+  //fprintf(stderr,"%s %d %s\n",__func__,sigid,strsignal(sigid));
   if (!aj_app) return;
   switch (sigid) {
     case SIGINT: if (++(aj_app->sigintc)>=3) {
@@ -50,6 +52,7 @@ static void aj_app_rcvsig(int sigid) {
  */
  
 void aj_app_del(struct aj_app *app,int status) {
+  fprintf(stderr,"%s %d\n",__func__,status);
   if (app==aj_app) aj_app=0;
   if (!app) return;
   
@@ -152,12 +155,17 @@ struct aj_app *aj_app_new(int argc,char **argv) {
   if (!app) return 0;
   aj_app=app;
   
-  signal(SIGINT,aj_app_rcvsig);
-  signal(SIGUSR1,aj_app_rcvsig);
-  
   //fprintf(stderr,"%s: pid %d\n",__func__,getpid());
   
   app->poll_timeout_ms=1000;
+  
+  signal(SIGINT,aj_app_rcvsig);
+  signal(SIGUSR1,aj_app_rcvsig);
+  
+  srand(time(0));
+  
+  // We get a SIGTERM somewhere between here and "acquired usbhost". WHY???
+  //...I guess we don't need to daemonize when systemd launches us. How convenient!
   
   struct aj_usbhost_delegate usbhost_delegate={
     .userdata=app,
@@ -165,12 +173,7 @@ struct aj_app *aj_app_new(int argc,char **argv) {
     .cb_disconnect=aj_app_cb_disconnect,
   };
   if (!(app->usbhost=aj_usbhost_new(&usbhost_delegate))) {
-    aj_app_del(app,1);
-    return 0;
-  }
-  
-  if (daemon(0,0)<0) {
-    fprintf(stderr,"Failed to daemonize.\n");
+    fprintf(stderr,"failed to open usbhost\n");
     aj_app_del(app,1);
     return 0;
   }
@@ -182,7 +185,6 @@ struct aj_app *aj_app_new(int argc,char **argv) {
  */
  
 static int aj_app_poll_devices(struct aj_app *app) {
-  //fprintf(stderr,"*** SIGUSR1: check for usb input ***\n");//TODO
   int i=app->devicec;
   while (i-->0) {
     struct aj_device *device=app->devicev[i];

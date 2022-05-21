@@ -1,9 +1,14 @@
 [Unit]
 Description=Xbox and 8bitdo joystick driver.
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
+User=root
+Restart=always
+RestartSec=2
 ExecStart=/usr/local/bin/akjoy
 
 [Install]
 WantedBy=multi-user.target
+
