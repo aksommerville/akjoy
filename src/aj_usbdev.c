@@ -186,6 +186,8 @@ int aj_usbdev_poll(void *dstpp,struct aj_usbdev *usbdev) {
   
   void *result=0;
   if (ioctl(usbdev->fd,USBDEVFS_REAPURBNDELAY,&result)<0) {
+    if (errno==EAGAIN) return 0;
+    if (errno==EINTR) return 0;
     fprintf(stderr,"%s:USBDEVFS_REAPURBNDELAY: %m\n",usbdev->path);
     return -1;
   }
